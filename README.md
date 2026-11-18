@@ -63,3 +63,16 @@ Times are 24-hour. Put your name in `USER_NAME` if you want him to use it. He is
 - He only walks on the primary monitor
 - If the taskbar is set to auto-hide, he stands at the bottom edge of the screen
 - Built and tuned for Windows 11, haven't tried other versions much
+
+
+## Starting him automatically with Windows
+
+1. **Find your `pythonw.exe` path:** Open Command Prompt or PowerShell and run `where pythonw`. Copy the full path returned (ignore any path inside `\WindowsApps\pythonw.exe`, as that is a Windows Store stub). If you use `uv`, run `uv python find` and replace `python.exe` with `pythonw.exe` in that path.
+2. **Open the Startup folder:** Press `Win+R`, type `shell:startup`, and press **Enter**.
+3. **Create a shortcut:** Right-click an empty area in the folder and select **New → Shortcut**.
+4. **Set the target:** In **Type the location of the item**, enter the full path to `pythonw.exe` followed by the full path to `pocket_astro.py` (wrapping both in quotes, e.g. `"C:\path\to\pythonw.exe" "C:\path\to\pocket_astro.py"`), then click **Next**.
+5. **Name the shortcut:** Name it `Pocket_Astro` (or anything you like) and click **Finish**.
+6. **Configure shortcut properties:** Right-click the new shortcut and select **Properties**:
+* Set **Start in** to the folder containing `pocket_astro.py` (e.g., `"C:\path\to\Pocket_Astro"`).
+* Change **Run** from *Normal window* to **Minimized**.
+* Click **Apply**, then **OK**.
