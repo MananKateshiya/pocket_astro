@@ -16,7 +16,7 @@ He wanders around, sits down, falls asleep, and gets dizzy if you poke him too m
 You need Python 3.8+ on Windows. tkinter comes with the normal installer, so there's nothing to pip install.
 
 ```
-pythonw pocket_pocket_astro.py
+pythonw pocket_astro.py
 ```
 
 Use `python pocket_astro.py` instead if you want a console window to see errors.
