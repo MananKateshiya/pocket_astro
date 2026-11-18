@@ -67,7 +67,7 @@ To turn it off, set `NOW_PLAYING = False` at the top of the script. `NOW_PLAYING
 - **Drag him**: he panics. Let go and he falls back down. Throw him hard enough and he lands dizzy
 - **Right-click**: menu with wave, spin, nap, wander on/off, speech on/off, quit
 
-On his own he walks, sits, waves, blinks, and follows your mouse with his eyes. Leave the PC alone for a minute or so and he'll nod off.
+On his own he walks, sits, waves, blinks, and follows your mouse with his eyes. Leave the PC alone (no keyboard or mouse for about 3 minutes) and he'll sit down and nod off. He wakes up when you come back. Change `SLEEP_AFTER_IDLE_S` if that's too soon or too late.
 
 ## Talking
 
@@ -84,7 +84,7 @@ REMINDERS = [
 CHAT = [...]
 ```
 
-Times are 24-hour. Put your name in `USER_NAME` if you want him to use it. He isn't listening to anything, he just checks the clock every 20 seconds, so CPU use stays close to zero.
+Times are 24-hour. Put your name in `USER_NAME` if you want him to use it. He isn't listening to anything, he just checks the clock every 20 seconds, so CPU use stays close to zero. To know if you're away he asks Windows how long it's been since your last input. That's just a number, never what you typed.
 
 ## Starting him automatically with Windows
 

@@ -17,10 +17,12 @@ What he does
 Autostart: press Win+R, type  shell:startup , and drop a shortcut to
            pythonw.exe astro.py in that folder.
 """
+import asyncio
 import ctypes
 import math
 import random
 import sys
+import threading
 import time
 import tkinter as tk
 import tkinter.font as tkfont
@@ -30,6 +32,9 @@ from ctypes import wintypes
 USER_NAME = "MANAN"              # put your name here, e.g. "Manan", to be greeted by name
 GREETING_DELAY_S = 10       # greets you this many seconds after he starts
 CHAT_EVERY_MIN = (6, 14)    # random small-talk every 6-14 minutes
+SLEEP_AFTER_IDLE_S = 180    # he only dozes off after this long with no keyboard/mouse use at all
+NOW_PLAYING = True          # announce songs/videos playing in any app or browser tab
+NOW_PLAYING_SHOW_ARTIST = False   # True -> "Title - Artist" (YouTube shows the channel name)
 REMINDERS = [               # ("HH:MM" 24h clock, message) - each fires once a day
     ("09:30", "Water time! Sip sip."),
     ("13:00", "Lunch break? Fuel up, astronaut."),
@@ -61,7 +66,7 @@ COL = {"O": ORANGE, "D": ORANGE_DK, "V": NAVY, "W": CREAM, "S": CREAM, "N": OUTL
 HEAD = [
     "..OOOOOOOO..",
     ".OWOOOOOOOD.",
-    ".OWVVVVVVVD.",
+    ".OVVVVVVVVD.",
     ".OVVVVVVVVD.",
     ".OVVVVVVVVD.",
     ".OVVVVVVVVD.",
@@ -81,7 +86,7 @@ LEGS = {  # starts at y = 14
     "walkA": ["..OOO...OOD.", "..OOO...OOD.", ".WWWW...WWWW"],
     "walkB": ["..OOO..OOD..", "..OOO..WWWW.", ".WWWW......."],
     "walkC": ["..OOO..OOD..", ".WWWW..OOD..", ".......WWWW."],
-    "sit": ["..OOO..OOD..", ".WWWW..WWWW."],
+    "sit": ["..OOOOOOOD..", ".OOOOOOOOOD.", ".WWWWWWWWWW."],  # lowered body, feet out front
     "tuck": ["..OOOOOOOD..", ".WWWWWWWWWW."],
     "dangleA": [".OOO....OOD.", ".OOO....OOD.", "WWWW....WWWW"],
     "dangleB": ["...OOOOOD...", "...OOOOOD...", "..WWWWWWW..."],
@@ -116,6 +121,11 @@ EYES = {
 }
 LOOKABLE = ("open", "blink", "wide")
 
+HP_BAND = ([(0, 1), (0, 0), (1, 0), (1, -1)] + [(x, -1) for x in range(2, 10)]
+           + [(10, -1), (10, 0), (11, 0), (11, 1)])
+HP_CUPS = [(x, y) for y in range(2, 6) for x in (-1, 0, 11, 12)]
+HP_GLINT = [(-1, 3), (12, 3)]
+
 HEART = [".O.O.", "OOOOO", ".OOO.", "..O.."]
 ZEE = ["SSS", "..S", ".S.", "SSS"]
 STAR = [".S.", "SSS", ".S."]
@@ -126,14 +136,14 @@ OX = 4  # sprite x-offset inside canvas
 SPIN = (1.0, 0.6, 0.2, -0.6, -1.0, -0.6, 0.2, 0.6)
 
 
-def build(legs, arms, eyes, look, bob, k, fx, fxp):
+def build(legs, arms, eyes, look, bob, k, fx, fxp, hp=False):
     """Return {(x, y): colour-letter} for one frame, outline included."""
     px = {}
-    for y, row in enumerate(TORSO, 8):
+    for y, row in enumerate(TORSO[:4] if legs == "sit" else TORSO, 8):
         for x, c in enumerate(row):
             if c != ".":
                 px[(x, y)] = c
-    for y, row in enumerate(LEGS[legs], 14):
+    for y, row in enumerate(LEGS[legs], 12 if legs == "sit" else 14):
         for x, c in enumerate(row):
             if c != ".":
                 px[(x, y)] = c
@@ -149,6 +159,13 @@ def build(legs, arms, eyes, look, bob, k, fx, fxp):
     shift = look if eyes in LOOKABLE else 0
     for x, y in EYES[eyes]:
         px[(min(9, max(2, x + shift)), y + bob)] = "W"
+    if eyes != "x":  # visor shine; hops to the far side when he looks left so it never touches an eye
+        px[(9 if look < 0 and eyes in LOOKABLE else 2, 2 + bob)] = "W"
+    if hp:  # navy headphones
+        for x, y in HP_BAND + HP_CUPS:
+            px[(x, y + bob)] = "V"
+        for x, y in HP_GLINT:
+            px[(x, y + bob)] = "W"
 
     dy = CH - 2 - max(y for _, y in px)  # feet always on the bottom row
     body = {}
@@ -205,6 +222,10 @@ class MONITORINFO(ctypes.Structure):
     ]
 
 
+class LASTINPUTINFO(ctypes.Structure):
+    _fields_ = [("cbSize", wintypes.UINT), ("dwTime", wintypes.DWORD)]
+
+
 def winapi():
     u = ctypes.windll.user32
     u.GetForegroundWindow.restype = wintypes.HWND
@@ -228,6 +249,89 @@ def winapi():
 SHELL_CLASSES = {"Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"}
 AIR = {"fall", "happy", "spin"}
 TICK_MS = 33
+
+
+class NowPlaying:
+    """Hears about song changes straight from Windows (the same media info the
+    volume flyout and Wallpaper Engine use). It is event-driven: this thread
+    sleeps until Windows says something changed - no polling, ~0% CPU.
+    Optional: needs  pip install winrt-runtime winrt-Windows.Media.Control
+                     winrt-Windows.Foundation winrt-Windows.Foundation.Collections
+                     winrt-Windows.Storage.Streams
+    Without it Astro simply doesn't announce music."""
+
+    def __init__(self, callback):
+        self.cb, self.last, self.sess, self.timer, self.loop = callback, None, None, None, None
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _run(self):
+        try:
+            try:
+                from winrt.windows.media.control import (
+                    GlobalSystemMediaTransportControlsSessionManager as Manager)
+            except ImportError:
+                from winsdk.windows.media.control import (
+                    GlobalSystemMediaTransportControlsSessionManager as Manager)
+        except ImportError:
+            print("Astro: music announcements are off (pip install winrt-runtime "
+                  "winrt-Windows.Media.Control winrt-Windows.Foundation "
+                  "winrt-Windows.Foundation.Collections winrt-Windows.Storage.Streams)")
+            return
+        try:
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
+            self.loop.run_until_complete(self._start(Manager))
+            self.loop.run_forever()  # idle until Windows calls us
+        except Exception as e:
+            print("Astro: music announcements unavailable:", e)
+
+    async def _start(self, Manager):
+        self.mgr = await Manager.request_async()
+        self._on_session = lambda sender, args: self.loop.call_soon_threadsafe(self._rebind)
+        self._on_change = lambda sender, args: self.loop.call_soon_threadsafe(self._schedule)
+        self.mgr.add_current_session_changed(self._on_session)
+        self._rebind(first=True)
+        await self._read(announce=False)  # remember what's already playing, stay quiet
+
+    def _rebind(self, first=False):
+        if self.sess is not None:
+            try:
+                self.sess.remove_media_properties_changed(self.tok1)
+                self.sess.remove_playback_info_changed(self.tok2)
+            except Exception:
+                pass
+        try:
+            self.sess = self.mgr.get_current_session()
+        except Exception:
+            self.sess = None
+        if self.sess is not None:
+            self.tok1 = self.sess.add_media_properties_changed(self._on_change)
+            self.tok2 = self.sess.add_playback_info_changed(self._on_change)
+        if not first:
+            self._schedule()
+
+    def _schedule(self):  # wait a moment: players fire several half-filled updates per song
+        if self.timer:
+            self.timer.cancel()
+        self.timer = self.loop.call_later(
+            1.0, lambda: asyncio.ensure_future(self._read(), loop=self.loop))
+
+    async def _read(self, announce=True):
+        s = self.sess
+        if s is None:
+            return
+        try:
+            if int(s.get_playback_info().playback_status) != 4:  # 4 = playing
+                return
+            info = await s.try_get_media_properties_async()
+            title, artist = (info.title or "").strip(), (info.artist or "").strip()
+        except Exception:
+            return
+        if not title or (title, artist) == self.last:
+            return
+        self.last = (title, artist)
+        if announce:
+            self.cb(title, artist)
 
 
 class Bubble:
@@ -362,6 +466,8 @@ class Astro:
         self.menu.add_command(label="Quit Astro", command=r.destroy)
 
         self.bubble = Bubble(self)
+        self.music_pending = None
+        self.music = NowPlaying(self.on_song) if NOW_PLAYING else None
         self.cv.bind("<ButtonPress-1>", self.on_press)
         self.cv.bind("<B1-Motion>", self.on_motion)
         self.cv.bind("<ButtonRelease-1>", self.on_release)
@@ -423,6 +529,20 @@ class Astro:
                 self.u.SetWindowPos(self.hwnd, wintypes.HWND(-1), 0, 0, 0, 0, 0x13)
             except Exception:
                 pass
+
+    # ── are you around? (asks Windows for "seconds since last input" - a timestamp, never what you type) ──
+    def system_idle_seconds(self):
+        try:
+            li = LASTINPUTINFO()
+            li.cbSize = ctypes.sizeof(li)
+            if self.u.GetLastInputInfo(ctypes.byref(li)):
+                return ((ctypes.windll.kernel32.GetTickCount() - li.dwTime) & 0xFFFFFFFF) / 1000
+        except Exception:
+            pass
+        return 0.0  # unknown -> assume you're there, so he never falls asleep by mistake
+
+    def idle_for(self):
+        return min(self.system_idle_seconds(), time.time() - self.last_active)
 
     # ── state helpers ──
     def set(self, state, dur=0):
@@ -518,12 +638,28 @@ class Astro:
                 self.fired.add((today, hhmm))
                 return text
 
+    def on_song(self, title, artist):  # called from the watcher thread
+        title = title if len(title) <= 60 else title[:57] + "..."
+        if NOW_PLAYING_SHOW_ARTIST and artist:
+            title += " - " + artist
+        self.music_pending = ("Now playing!\n" + title, time.time())
+
     def talk_check(self):
         if not self.speech.get():
-            self.pending = None
+            self.pending = self.music_pending = None
             self.bubble.hide()
             return
         now = time.time()
+        if self.music_pending:
+            text, ts = self.music_pending
+            if now - ts > 15:  # stale (e.g. you were in a fullscreen game)
+                self.music_pending = None
+            elif not self.hidden and self.state not in AIR and self.state != "drag":
+                self.music_pending = None
+                self.bubble.show(text, max(5.0, 3 + 0.07 * len(text)))
+                self.last_active = now
+                self.set("music", 75)  # ~2.5 s of headphone bopping
+                return
         if self.pending is None and now >= self.next_clock:
             self.next_clock = now + 20
             if self.greet_at and now >= self.greet_at:
@@ -558,9 +694,9 @@ class Astro:
             self.look = random.choice((-1, 0, 1))
 
     def choose_next(self):
-        idle_for = time.time() - self.last_active
+        idle_for = self.idle_for()
         r = random.random()
-        if idle_for > 60 and r < 0.5:
+        if idle_for > SLEEP_AFTER_IDLE_S - 60 and r < 0.5:
             return self.set("sit", random.randint(60, 120))
         if self.autowalk.get() and r < 0.5:
             self.dir = random.choice((-1, 1))
@@ -618,20 +754,23 @@ class Astro:
             if self.st >= self.dur:
                 self.set("idle", random.randint(40, 100))
         elif s == "sit" and self.st >= self.dur:
-            if time.time() - self.last_active > 45:
-                self.set("sleep", random.randint(1500, 3000))
+            if self.idle_for() > SLEEP_AFTER_IDLE_S:
+                self.set("sleep", 10 ** 9)  # sleeps until you come back
             else:
                 self.set("idle", random.randint(40, 100))
-        elif s == "sleep" and self.st >= self.dur:
-            self.last_active = time.time()
-            self.set("idle", 60)
-        elif s in ("wave", "land", "dizzy") and self.st >= self.dur:
+        elif s == "sleep":
+            if self.st % 30 == 0 and self.dur > 10 ** 6 and self.system_idle_seconds() < 5:
+                self.set("idle", 60)  # you're back: wake up
+            elif self.st >= self.dur:  # a manual nap from the menu ran out
+                self.last_active = time.time()
+                self.set("idle", 60)
+        elif s in ("wave", "land", "dizzy", "music") and self.st >= self.dur:
             self.set("idle", random.randint(40, 100))
 
     # ── drawing ──
     def pose(self):
         s, t, look = self.state, self.st, self.look
-        legs, arms, eyes, bob, k, fx, fp = "stand", "down", "open", 0, 1.0, None, 0
+        legs, arms, eyes, bob, k, fx, fp, hp = "stand", "down", "open", 0, 1.0, None, 0, False
         if s == "idle":
             eyes, bob = ("blink" if t % 110 > 104 else "open"), (t // 25) % 2
         elif s == "walk":
@@ -641,6 +780,8 @@ class Astro:
             legs, eyes = "sit", ("blink" if t % 110 > 104 else "open")
         elif s == "sleep":
             legs, eyes, look, bob, fx, fp = "sit", "sleep", 0, (t // 30) % 2, "zzz", (t // 8) % 12
+        elif s == "music":
+            eyes, look, bob, hp = "happy", 0, (t // 6) % 2, True
         elif s == "wave":
             arms, eyes, look = ("waveA", "waveB")[(t // 6) % 2], "happy", 0
         elif s == "happy":
@@ -656,7 +797,7 @@ class Astro:
             legs, eyes, look = "sit", "sleep", 0
         elif s == "dizzy":
             legs, eyes, look, fx, fp = "sit", "x", 0, "stars", (t // 3) % 12
-        return (legs, arms, eyes, look, bob, k, fx, fp)
+        return (legs, arms, eyes, look, bob, k, fx, fp, hp)
 
     def image_for(self, key):
         img = self.cache.get(key)
