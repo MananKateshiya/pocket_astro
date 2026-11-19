@@ -1,7 +1,7 @@
 """
-POCKET_ASTRO - a tiny pixel-art orange astronaut that lives on your Windows 11 taskbar.
+ASTRO - a tiny pixel-art orange astronaut that lives on your Windows 11 taskbar.
 
-Run:        python pocket_astro.py          (or  pythonw pocket_astro.py  for no console window)
+Run:        python astro.py          (or  pythonw astro.py  for no console window)
 Needs:      Python 3.8+ for Windows (tkinter is included). No pip installs.
 
 What he does
@@ -15,7 +15,7 @@ What he does
   * Right-click   -> menu (wave, spin, nap, wander on/off, quit)
 
 Autostart: press Win+R, type  shell:startup , and drop a shortcut to
-           pythonw.exe pocket_astro.py in that folder.
+           pythonw.exe astro.py in that folder.
 """
 import asyncio
 import ctypes
@@ -29,14 +29,10 @@ import tkinter.font as tkfont
 from ctypes import wintypes
 
 # ───────────────────────── things he says (edit freely!) ─────────────────────────
-USER_NAME = ""              # put your name here, e.g. "Manan", to be greeted by name
+USER_NAME = "MANAN"              # put your name here, e.g. "Manan", to be greeted by name
 GREETING_DELAY_S = 10       # greets you this many seconds after he starts
-<<<<<<< HEAD
-CHAT_EVERY_MIN = (6, 14)    # random small-talk every 6-14 minutes
-=======
 CHAT_EVERY_MIN = (5, 13)    # random small-talk every 6-14 minutes
 SLEEP_AFTER_IDLE_S = 180    # he only dozes off after this long with no keyboard/mouse use at all
->>>>>>> experimental
 NOW_PLAYING = True          # announce songs/videos playing in any app or browser tab
 NOW_PLAYING_SHOW_ARTIST = False   # True -> "Title - Artist" (YouTube shows the channel name)
 REMINDERS = [               # ("HH:MM" 24h clock, message) - each fires once a day
@@ -246,11 +242,8 @@ def build(legs, arms, eyes, look, bob, k, fx, fxp, hp=False):
     shift = look if eyes in LOOKABLE else 0
     for x, y in EYES[eyes]:
         px[(min(9, max(2, x + shift)), y + bob)] = "W"
-<<<<<<< HEAD
-=======
     if eyes != "x":  # visor shine; hops to the far side when he looks left so it never touches an eye
         px[(9 if look < 0 and eyes in LOOKABLE else 2, 2 + bob)] = "W"
->>>>>>> experimental
     if hp:  # navy headphones
         for x, y in HP_BAND + HP_CUPS:
             px[(x, y + bob)] = "V"
@@ -348,11 +341,7 @@ class NowPlaying:
     Optional: needs  pip install winrt-runtime winrt-Windows.Media.Control
                      winrt-Windows.Foundation winrt-Windows.Foundation.Collections
                      winrt-Windows.Storage.Streams
-<<<<<<< HEAD
-    Without it Pocket_Astro simply doesn't announce music."""
-=======
     Without it Astro simply doesn't announce music."""
->>>>>>> experimental
 
     def __init__(self, callback):
         self.cb, self.last, self.sess, self.timer, self.loop = callback, None, None, None, None
@@ -377,11 +366,7 @@ class NowPlaying:
             self.loop.run_until_complete(self._start(Manager))
             self.loop.run_forever()  # idle until Windows calls us
         except Exception as e:
-<<<<<<< HEAD
-            print("Pocket_Astro: music announcements unavailable:", e)
-=======
             print("Astro: music announcements unavailable:", e)
->>>>>>> experimental
 
     async def _start(self, Manager):
         self.mgr = await Manager.request_async()
@@ -856,18 +841,12 @@ class Astro:
                 self.set("sleep", 10 ** 9)  # sleeps until you come back
             else:
                 self.set("idle", random.randint(40, 100))
-<<<<<<< HEAD
-        elif s == "sleep" and self.st >= self.dur:
-            self.last_active = time.time()
-            self.set("idle", 60)
-=======
         elif s == "sleep":
             if self.st % 30 == 0 and self.dur > 10 ** 6 and self.system_idle_seconds() < 5:
                 self.set("idle", 60)  # you're back: wake up
             elif self.st >= self.dur:  # a manual nap from the menu ran out
                 self.last_active = time.time()
                 self.set("idle", 60)
->>>>>>> experimental
         elif s in ("wave", "land", "dizzy", "music") and self.st >= self.dur:
             self.set("idle", random.randint(40, 100))
 
