@@ -31,25 +31,113 @@ from ctypes import wintypes
 # ───────────────────────── things he says (edit freely!) ─────────────────────────
 USER_NAME = ""              # put your name here, e.g. "Manan", to be greeted by name
 GREETING_DELAY_S = 10       # greets you this many seconds after he starts
+<<<<<<< HEAD
 CHAT_EVERY_MIN = (6, 14)    # random small-talk every 6-14 minutes
+=======
+CHAT_EVERY_MIN = (5, 13)    # random small-talk every 6-14 minutes
+SLEEP_AFTER_IDLE_S = 180    # he only dozes off after this long with no keyboard/mouse use at all
+>>>>>>> experimental
 NOW_PLAYING = True          # announce songs/videos playing in any app or browser tab
 NOW_PLAYING_SHOW_ARTIST = False   # True -> "Title - Artist" (YouTube shows the channel name)
 REMINDERS = [               # ("HH:MM" 24h clock, message) - each fires once a day
-    ("09:30", "Water time! Sip sip."),
-    ("13:00", "Lunch break? Fuel up, astronaut."),
+    ("10:30", "Water time! Sip sip."),
+    ("14:00", "Lunch break? Fuel up, astronaut."),
     ("16:00", "Stretch your back for a minute."),
     ("18:00", "It's 6 PM... coffee time?"),
-    ("22:30", "Getting late. Maybe wrap up soon?"),
+    ("23:30", "Getting late. Maybe wrap up soon?"),
 ]
+# CHAT = [
+#     "Don't forget to drink water!",
+#     "Look away from the screen for 20 seconds.",
+#     "Ctrl+S, friend. Ctrl+S.",
+#     "Houston, we have no bugs. Yet.",
+#     "Take a deep breath. You've got this.",
+#     "Beep boop. Just checking in.",
+#     "Stand up and stretch a little?",
+#     "Great job today!",
+# ] <- ORIGINAL CHAT
+
 CHAT = [
+    # ☀️ Wholesome & Friendly
     "Don't forget to drink water!",
     "Look away from the screen for 20 seconds.",
-    "Ctrl+S, friend. Ctrl+S.",
-    "Houston, we have no bugs. Yet.",
     "Take a deep breath. You've got this.",
+    "Hey, you're doing better than you think.",
+    "One step at a time, astronaut.",
+    "I'm glad we're on this mission together.",
+    "You deserve a little break.",
+    "Don't be too hard on yourself today.",
+    "Progress is progress, no matter how small.",
+    "Remember to unclench your jaw.",
+    "Your future self will thank you.",
+    "It's okay to take things slowly.",
+    "Proud of you, space ranger!",
+    "A little rest is part of the mission.",
+
+    # 🚀 Space-themed
+    "Houston, we have no bugs. Yet.",
+    "Ground control to Major Human.",
+    "All systems nominal. Probably.",
+    "Space is vast. Your potential is vaster.",
+    "Another day, another orbit around the Sun.",
+    "Keep reaching for the stars!",
+    "Warning: Excessive brilliance detected.",
+    "Gravity is optional. Sleep is not.",
+    "Mission control says you're doing great.",
+    "Somewhere out there, a star is being born.",
+    "I've seen the stars. Your code is scarier.",
+    "Exploration protocol: Keep going.",
+    "We are made of stardust, you know.",
+    "Just a little guy in a big universe.",
+
+    # 💻 Developer Humor
+    "Ctrl+S, friend. Ctrl+S.",
+    "It works on my machine. 🚀",
+    "Have you tried turning it off and on again?",
+    "Another bug? Must be a space anomaly.",
+    "Remember: 99 little bugs in the code...",
+    "Commit early. Commit often.",
+    "That's not a bug. It's an undocumented feature.",
+    "Your code called. It misses you.",
+    "Coffee.exe has stopped working.",
+    "Please don't push directly to production.",
+    "Stack Overflow is our mission control.",
+    "One does not simply write bug-free code.",
+    "404: Motivation not found.",
+    "The compiler fears you.",
+    "Have you checked the console?",
+    "Rubber duck debugging is scientifically valid.",
+
+    # 😂 Silly & Random
     "Beep boop. Just checking in.",
+    "I wonder if aliens have Wi-Fi.",
+    "I saw you move that mouse. Suspicious.",
+    "Do astronauts get space sickness?",
+    "I could really go for a space sandwich.",
+    "Just standing here. Menacingly.",
+    "Do you think the Moon gets lonely?",
+    "I'm small, but my dreams are astronomical.",
+    "I have absolutely no idea what I'm doing.",
+    "Blink twice if you need a coffee.",
+    "Can we go to Mars after work?",
+    "My helmet smells like yesterday.",
+    "I was promised a spaceship.",
+    "I wonder what's happening in Andromeda.",
+
+    # 🌱 Productivity & Motivation
+    "What's the next small thing on your list?",
+    "Don't chase perfect. Chase progress.",
+    "Focus mode: ENGAGED.",
+    "A little consistency goes a long way.",
+    "You've got this. I believe in you.",
+    "Take a break before your brain files a complaint.",
     "Stand up and stretch a little?",
     "Great job today!",
+    "Your dreams aren't going to build themselves.",
+    "Keep showing up. That's the secret.",
+    "Don't let perfect be the enemy of done.",
+    "One task at a time. No need to rush.",
+    "Even rockets need time to launch.",
 ]
 
 # ───────────────────────── palette (from the Artemis-II sheet) ─────────────────────────
@@ -65,7 +153,7 @@ COL = {"O": ORANGE, "D": ORANGE_DK, "V": NAVY, "W": CREAM, "S": CREAM, "N": OUTL
 HEAD = [
     "..OOOOOOOO..",
     ".OWOOOOOOOD.",
-    ".OWVVVVVVVD.",
+    ".OVVVVVVVVD.",
     ".OVVVVVVVVD.",
     ".OVVVVVVVVD.",
     ".OVVVVVVVVD.",
@@ -85,7 +173,7 @@ LEGS = {  # starts at y = 14
     "walkA": ["..OOO...OOD.", "..OOO...OOD.", ".WWWW...WWWW"],
     "walkB": ["..OOO..OOD..", "..OOO..WWWW.", ".WWWW......."],
     "walkC": ["..OOO..OOD..", ".WWWW..OOD..", ".......WWWW."],
-    "sit": ["..OOO..OOD..", ".WWWW..WWWW."],
+    "sit": ["..OOOOOOOD..", ".OOOOOOOOOD.", ".WWWWWWWWWW."],  # lowered body, feet out front
     "tuck": ["..OOOOOOOD..", ".WWWWWWWWWW."],
     "dangleA": [".OOO....OOD.", ".OOO....OOD.", "WWWW....WWWW"],
     "dangleB": ["...OOOOOD...", "...OOOOOD...", "..WWWWWWW..."],
@@ -138,11 +226,11 @@ SPIN = (1.0, 0.6, 0.2, -0.6, -1.0, -0.6, 0.2, 0.6)
 def build(legs, arms, eyes, look, bob, k, fx, fxp, hp=False):
     """Return {(x, y): colour-letter} for one frame, outline included."""
     px = {}
-    for y, row in enumerate(TORSO, 8):
+    for y, row in enumerate(TORSO[:4] if legs == "sit" else TORSO, 8):
         for x, c in enumerate(row):
             if c != ".":
                 px[(x, y)] = c
-    for y, row in enumerate(LEGS[legs], 14):
+    for y, row in enumerate(LEGS[legs], 12 if legs == "sit" else 14):
         for x, c in enumerate(row):
             if c != ".":
                 px[(x, y)] = c
@@ -158,6 +246,11 @@ def build(legs, arms, eyes, look, bob, k, fx, fxp, hp=False):
     shift = look if eyes in LOOKABLE else 0
     for x, y in EYES[eyes]:
         px[(min(9, max(2, x + shift)), y + bob)] = "W"
+<<<<<<< HEAD
+=======
+    if eyes != "x":  # visor shine; hops to the far side when he looks left so it never touches an eye
+        px[(9 if look < 0 and eyes in LOOKABLE else 2, 2 + bob)] = "W"
+>>>>>>> experimental
     if hp:  # navy headphones
         for x, y in HP_BAND + HP_CUPS:
             px[(x, y + bob)] = "V"
@@ -219,6 +312,10 @@ class MONITORINFO(ctypes.Structure):
     ]
 
 
+class LASTINPUTINFO(ctypes.Structure):
+    _fields_ = [("cbSize", wintypes.UINT), ("dwTime", wintypes.DWORD)]
+
+
 def winapi():
     u = ctypes.windll.user32
     u.GetForegroundWindow.restype = wintypes.HWND
@@ -251,7 +348,11 @@ class NowPlaying:
     Optional: needs  pip install winrt-runtime winrt-Windows.Media.Control
                      winrt-Windows.Foundation winrt-Windows.Foundation.Collections
                      winrt-Windows.Storage.Streams
+<<<<<<< HEAD
     Without it Pocket_Astro simply doesn't announce music."""
+=======
+    Without it Astro simply doesn't announce music."""
+>>>>>>> experimental
 
     def __init__(self, callback):
         self.cb, self.last, self.sess, self.timer, self.loop = callback, None, None, None, None
@@ -276,7 +377,11 @@ class NowPlaying:
             self.loop.run_until_complete(self._start(Manager))
             self.loop.run_forever()  # idle until Windows calls us
         except Exception as e:
+<<<<<<< HEAD
             print("Pocket_Astro: music announcements unavailable:", e)
+=======
+            print("Astro: music announcements unavailable:", e)
+>>>>>>> experimental
 
     async def _start(self, Manager):
         self.mgr = await Manager.request_async()
@@ -523,6 +628,20 @@ class Astro:
             except Exception:
                 pass
 
+    # ── are you around? (asks Windows for "seconds since last input" - a timestamp, never what you type) ──
+    def system_idle_seconds(self):
+        try:
+            li = LASTINPUTINFO()
+            li.cbSize = ctypes.sizeof(li)
+            if self.u.GetLastInputInfo(ctypes.byref(li)):
+                return ((ctypes.windll.kernel32.GetTickCount() - li.dwTime) & 0xFFFFFFFF) / 1000
+        except Exception:
+            pass
+        return 0.0  # unknown -> assume you're there, so he never falls asleep by mistake
+
+    def idle_for(self):
+        return min(self.system_idle_seconds(), time.time() - self.last_active)
+
     # ── state helpers ──
     def set(self, state, dur=0):
         self.state, self.st, self.dur = state, 0, dur
@@ -673,9 +792,9 @@ class Astro:
             self.look = random.choice((-1, 0, 1))
 
     def choose_next(self):
-        idle_for = time.time() - self.last_active
+        idle_for = self.idle_for()
         r = random.random()
-        if idle_for > 60 and r < 0.5:
+        if idle_for > SLEEP_AFTER_IDLE_S - 60 and r < 0.5:
             return self.set("sit", random.randint(60, 120))
         if self.autowalk.get() and r < 0.5:
             self.dir = random.choice((-1, 1))
@@ -733,13 +852,22 @@ class Astro:
             if self.st >= self.dur:
                 self.set("idle", random.randint(40, 100))
         elif s == "sit" and self.st >= self.dur:
-            if time.time() - self.last_active > 45:
-                self.set("sleep", random.randint(1500, 3000))
+            if self.idle_for() > SLEEP_AFTER_IDLE_S:
+                self.set("sleep", 10 ** 9)  # sleeps until you come back
             else:
                 self.set("idle", random.randint(40, 100))
+<<<<<<< HEAD
         elif s == "sleep" and self.st >= self.dur:
             self.last_active = time.time()
             self.set("idle", 60)
+=======
+        elif s == "sleep":
+            if self.st % 30 == 0 and self.dur > 10 ** 6 and self.system_idle_seconds() < 5:
+                self.set("idle", 60)  # you're back: wake up
+            elif self.st >= self.dur:  # a manual nap from the menu ran out
+                self.last_active = time.time()
+                self.set("idle", 60)
+>>>>>>> experimental
         elif s in ("wave", "land", "dizzy", "music") and self.st >= self.dur:
             self.set("idle", random.randint(40, 100))
 
