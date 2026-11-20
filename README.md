@@ -57,7 +57,7 @@ pip install winrt-runtime winrt-Windows.Media.Control winrt-Windows.Foundation w
 
 Skip all of it and everything else still works, he just won't announce music. If it isn't working, run with `python` instead of `pythonw` and look for a line starting with `Astro:` in the console.
 
-To turn it off, set `NOW_PLAYING = False` at the top of the script. `NOW_PLAYING_SHOW_ARTIST = True` adds the artist (on YouTube that's the channel name).
+To turn it off, set `NOW_PLAYING = False` in `astro/config.py`. `NOW_PLAYING_SHOW_ARTIST = True` adds the artist (on YouTube that's the channel name).
 
 ## Things you can do to him
 
@@ -71,7 +71,7 @@ On his own he walks, sits, waves, blinks, and follows your mouse with his eyes. 
 
 ## Talking
 
-He says hi a few seconds after starting, gives a few reminders through the day (water, lunch, coffee at 6 PM, etc.), and does random small talk every 6 to 14 minutes. All of it is at the top of `pocket_astro.py`:
+He says hi a few seconds after starting, gives a few reminders through the day (water, lunch, coffee at 6 PM, etc.), and does random small talk every 6 to 14 minutes. All of it is in `astro/config.py`:
 
 ```python
 USER_NAME = ""
@@ -108,6 +108,7 @@ Not using uv? Run `where pythonw` and use that path as the target instead (ignor
 - The window is a borderless tkinter window with one color set as transparent, so only the astronaut's pixels are visible and clickable
 - `ctypes` asks Windows where the taskbar is (so he stands on it), and checks whether the front window covers the whole monitor (so he hides during fullscreen games and videos)
 - Behavior is a simple state machine: idle, walk, sit, sleep, wave, happy, spin, drag, fall, land, dizzy
+- `pocket_astro.py` is only the entry point; `astro/app.py` holds the pet and state machine, while `astro/sprites.py`, `astro/bubble.py`, `astro/music.py`, `astro/talk.py`, `astro/winapi.py`, and `astro/config.py` keep the drawing, UI, talking, Windows, and user settings separated
 
 ## Known limits
 
