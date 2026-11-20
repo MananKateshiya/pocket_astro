@@ -1,6 +1,6 @@
 USER_NAME = "MANAN"              # put your name here, e.g. "Manan", to be greeted by name
 GREETING_DELAY_S = 10       # greets you this many seconds after he starts
-CHAT_EVERY_MIN = (5, 13)    # random small-talk every 6-14 minutes
+CHAT_EVERY_MIN = (5, 13)    # random small-talk every 5-13 minutes
 SLEEP_AFTER_IDLE_S = 180    # he only dozes off after this long with no keyboard/mouse use at all
 NOW_PLAYING = True          # announce songs/videos playing in any app or browser tab
 NOW_PLAYING_SHOW_ARTIST = False   # True -> "Title - Artist" (YouTube shows the channel name)
@@ -13,18 +13,8 @@ REMINDERS = [               # ("HH:MM" 24h clock, message) - each fires once a d
 ]
 
 
-TIME_CHAT_CHANCE = 0.65   # how often he picks from the current time-of-day pool
+TIME_CHAT_CHANCE = 0.3    # how often he picks from the current time-of-day pool
 
-# CHAT = [
-#     "Don't forget to drink water!",
-#     "Look away from the screen for 20 seconds.",
-#     "Ctrl+S, friend. Ctrl+S.",
-#     "Houston, we have no bugs. Yet.",
-#     "Take a deep breath. You've got this.",
-#     "Beep boop. Just checking in.",
-#     "Stand up and stretch a little?",
-#     "Great job today!",
-# ] <- ORIGINAL CHAT
 
 CHAT = [
     # ☀️ Wholesome & Friendly

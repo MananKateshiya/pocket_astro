@@ -32,10 +32,35 @@ def due_reminder(fired):
     return None
 
 
-def pick_chat(recent):
-    pool = cfg.CHAT_TIME[time_slot()] if random.random() < cfg.TIME_CHAT_CHANCE else cfg.CHAT
-    for _ in range(5):
-        line = random.choice(pool)
-        if line not in recent:
-            break
-    return line, (recent + [line])[-8:]
+class ChatPicker:
+    def __init__(self):
+        self.remaining = {}
+        self.last_shown = {}
+
+    def _draw(self, name, pool):
+        if not pool:
+            return None
+        if not self.remaining.get(name):
+            lines = list(pool)
+            random.shuffle(lines)
+            last = self.last_shown.get(name)
+            if len(lines) > 1 and lines[0] == last:
+                lines[0], lines[1] = lines[1], lines[0]
+            self.remaining[name] = lines
+        line = self.remaining[name].pop(0)
+        self.last_shown[name] = line
+        return line
+
+    def pick(self):
+        slot = time_slot()
+        time_name, time_pool = slot, cfg.CHAT_TIME[slot]
+        general_name, general_pool = "general", cfg.CHAT
+        if random.random() < cfg.TIME_CHAT_CHANCE:
+            choices = ((time_name, time_pool), (general_name, general_pool))
+        else:
+            choices = ((general_name, general_pool), (time_name, time_pool))
+        for name, pool in choices:
+            line = self._draw(name, pool)
+            if line is not None:
+                return line
+        raise ValueError("Chat pools cannot both be empty")

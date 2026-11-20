@@ -6,7 +6,7 @@ from . import config as cfg
 from .bubble import Bubble
 from .music import NowPlaying
 from .sprites import CH, CW, COL, KEY, SPIN, build
-from .talk import due_reminder, greeting, pick_chat
+from .talk import ChatPicker, due_reminder, greeting
 from .winapi import (fullscreen_active, make_dpi_aware, set_topmost,
                      system_idle_seconds, winapi, work_area)
 
@@ -51,7 +51,7 @@ class Astro:
         self.moved = False
         self.speech = tk.BooleanVar(value=True)
         self.pending, self.fired = None, set()
-        self.recent = []
+        self.chat_picker = ChatPicker()
         now = time.time()
         self.greet_at, self.next_clock = now + cfg.GREETING_DELAY_S, 0.0
         self.schedule_chat()
@@ -198,8 +198,7 @@ class Astro:
         self.next_chat = time.time() + random.uniform(*cfg.CHAT_EVERY_MIN) * 60
 
     def pick_chat(self):
-        line, self.recent = pick_chat(self.recent)
-        return line
+        return self.chat_picker.pick()
 
     def greeting(self):
         return greeting(cfg.USER_NAME)
